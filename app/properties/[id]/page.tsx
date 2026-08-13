@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/router';
+import { useParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Building2, MapPin, Bed, Bath, 
@@ -33,13 +33,17 @@ interface UnitDetail {
   } | null;
 }
 
-export default function PropertyDetailPage({ params }: { params: { id: string } }) {
+export default function PropertyDetailPage() {
+  const routeParams = useParams();
+  const id = Array.isArray(routeParams?.id) ? routeParams.id[0] : routeParams?.id;
+
   const [unit, setUnit] = useState<UnitDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>('');
 
   useEffect(() => {
     async function fetchDetail() {
+      if (!id) return;
       try {
         setLoading(true);
         const { data, error } = await supabase
@@ -48,7 +52,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
             id, unit_number, rent_amount, bedrooms, bathrooms, sqft, status, amenities,
             properties (name, address, city, county, zip_code, image_url, gallery_images)
           `)
-          .eq('id', params.id)
+          .eq('id', id)
           .single();
 
         if (error) throw error;
@@ -65,8 +69,8 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
       }
     }
 
-    if (params?.id) fetchDetail();
-  }, [params?.id]);
+    fetchDetail();
+  }, [id]);
 
   if (loading) {
     return (
@@ -134,6 +138,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
               <button
                 key={idx}
                 onClick={() => setSelectedImage(imgUrl)}
+                type="button"
                 className={`relative h-24 lg:h-28 w-32 lg:w-full rounded-xl overflow-hidden flex-shrink-0 border-2 transition ${
                   selectedImage === imgUrl ? 'border-blue-600 ring-2 ring-blue-600/20' : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
@@ -145,7 +150,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
           </div>
         </div>
 
-        {/* Key Features & Application Sidebar */}
+        {/* Specs & Application Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <div className="lg:col-span-2 space-y-6">
@@ -184,12 +189,13 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
 
           </div>
 
-          {/* Tour / Application Box */}
+          {/* Sidebar Box */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit space-y-4">
             <h3 className="font-bold text-slate-900 text-lg">Interested in this unit?</h3>
             <p className="text-xs text-slate-500">Schedule an in-person tour or submit a rental application directly online.</p>
             
             <button 
+              type="button"
               onClick={() => alert('Tour scheduled!')}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition"
             >
@@ -197,6 +203,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
             </button>
 
             <button 
+              type="button"
               onClick={() => alert('Application form opened!')}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-xs transition"
             >

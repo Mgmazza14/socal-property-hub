@@ -7,7 +7,7 @@ import {
   Square, ShieldAlert, Loader2, AlertCircle
 } from 'lucide-react';
 
-const SUPABASE_URL = 'https://krxgbyjeskputjtuxlvw.supabase.co';
+const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_LJyOTqqq_mPqxqaA5hub0Cw_eqjV8T6D';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

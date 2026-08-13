@@ -72,7 +72,7 @@ export default function PropertyHomePage() {
         } else {
           setErrorMsg('An unexpected error occurred.');
         }
-      } font-medium {
+      } finally {
         setLoading(false);
       }
     }

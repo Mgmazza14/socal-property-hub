@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Building2, MapPin, Bed, Bath, 
@@ -106,6 +107,7 @@ export default function PropertyHomePage() {
             <a href="#tenant-portal" className="hover:text-blue-600 transition">Tenant Portal</a>
             <a href="#maintenance" className="hover:text-blue-600 transition">Maintenance</a>
             <a href="#contact" className="hover:text-blue-600 transition">Contact Us</a>
+            <Link href="/admin" className="text-blue-600 hover:text-blue-700 font-bold transition">+ Add Listing</Link>
           </nav>
 
           {/* Action Button */}
@@ -167,15 +169,15 @@ export default function PropertyHomePage() {
               const isVentura = unit.properties?.county === 'Ventura';
 
               return (
-                <div key={unit.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
+                <div key={unit.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group">
                   
-                  {/* Image Container with Badges */}
-                  <div className="relative h-48 w-full bg-slate-200 overflow-hidden">
+                  {/* Image Link */}
+                  <Link href={`/properties/${unit.id}`} className="relative h-48 w-full bg-slate-200 overflow-hidden block">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={unit.properties?.image_url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'} 
                       alt={unit.properties?.name || 'Property'} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     
                     {/* Status Badge */}
@@ -193,15 +195,15 @@ export default function PropertyHomePage() {
                         {isVentura ? 'Ventura Co.' : 'Los Angeles Co.'}
                       </span>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Property Details */}
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-1 gap-2">
-                        <h3 className="font-bold text-slate-900 text-lg leading-snug">
-                          {unit.properties?.name}
-                        </h3>
+                        <Link href={`/properties/${unit.id}`} className="font-bold text-slate-900 text-lg leading-snug hover:text-blue-600 transition">
+                          {unit.properties?.name} - {unit.unit_number}
+                        </Link>
                         <div className="text-right flex-shrink-0">
                           <span className="text-xl font-extrabold text-blue-600">${unit.rent_amount}</span>
                           <span className="text-[11px] text-slate-400 block font-normal">/month</span>
@@ -232,12 +234,12 @@ export default function PropertyHomePage() {
 
                     {/* Action Buttons */}
                     <div className="grid grid-cols-2 gap-3 pt-2">
-                      <button type="button" onClick={() => alert(`Scheduling tour for ${unit.properties?.name}`)} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl text-center transition">
-                        Schedule Tour
-                      </button>
-                      <button type="button" onClick={() => alert(`Applying online for ${unit.properties?.name}`)} className="bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-3 rounded-xl text-center transition">
+                      <Link href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl text-center transition">
+                        View Details
+                      </Link>
+                      <Link href={`/properties/${unit.id}`} className="bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-3 rounded-xl text-center transition">
                         Apply Online
-                      </button>
+                      </Link>
                     </div>
 
                   </div>

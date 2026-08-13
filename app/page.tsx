@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Building2, Wrench, CreditCard, MapPin, Bed, Bath, 
-  Square, PhoneCall, ExternalLink, ShieldAlert, 
-  ChevronRight, Filter, Loader2
+  Square, PhoneCall, ShieldAlert, Loader2
 } from 'lucide-react';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Use fallback placeholder URLs to pass Next.js build-time static checks
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type County = 'All' | 'Ventura' | 'Los Angeles';
@@ -40,6 +40,14 @@ export default function PropertyHomePage() {
     async function fetchUnits() {
       try {
         setLoading(true);
+
+        // Don't execute database query if environment keys aren't configured
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+          console.warn('Supabase URL variable missing in Vercel environment.');
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('units')
           .select(`
@@ -57,7 +65,7 @@ export default function PropertyHomePage() {
         if (error) throw error;
         if (data) setProperties(data as unknown as PropertyUnit[]);
       } catch (err) {
-        console.error('Error fetching properties:', err);
+        console.error('Error fetching properties from Supabase:', err);
       } finally {
         setLoading(false);
       }

@@ -10,7 +10,7 @@ import {
 // Hardcoded public Supabase configuration
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxlvw.supabase.co';
 // PASTE YOUR PUBLISHABLE ANON KEY BETWEEN THE QUOTES BELOW:
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+const SUPABASE_ANON_KEY = 'sb_publishable_LJyOTqqq_mPqxqA5hub0Cw_eqjV8T6D';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

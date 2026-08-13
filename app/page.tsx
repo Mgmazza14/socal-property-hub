@@ -1,16 +1,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { 
   Building2, Wrench, CreditCard, MapPin, Bed, Bath, 
   Square, PhoneCall, ShieldAlert, Loader2
 } from 'lucide-react';
 
-// Use fallback placeholder URLs to pass Next.js build-time static checks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Safely initialize Supabase client on runtime demand
+function getSupabaseClient(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key || !url.startsWith('http')) {
+    return null;
+  }
+  return createClient(url, key);
+}
 
 type County = 'All' | 'Ventura' | 'Los Angeles';
 
@@ -40,10 +46,10 @@ export default function PropertyHomePage() {
     async function fetchUnits() {
       try {
         setLoading(true);
+        const supabase = getSupabaseClient();
 
-        // Don't execute database query if environment keys aren't configured
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-          console.warn('Supabase URL variable missing in Vercel environment.');
+        if (!supabase) {
+          console.warn('Supabase environment variables missing or invalid.');
           setLoading(false);
           return;
         }
@@ -70,6 +76,7 @@ export default function PropertyHomePage() {
         setLoading(false);
       }
     }
+
     fetchUnits();
   }, []);
 
@@ -115,7 +122,7 @@ export default function PropertyHomePage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <h3 className="text-2xl font-bold text-slate-900">Available & Upcoming Vacancies</h3>
-            <p className="text-sm text-slate-500">Live database connection established</p>
+            <p className="text-sm text-slate-500">Live database inventory connected</p>
           </div>
 
           <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2 text-xs font-medium">

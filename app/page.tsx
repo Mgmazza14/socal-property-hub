@@ -1,22 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { 
-  Building2, Wrench, CreditCard, MapPin, Bed, Bath, 
-  Square, PhoneCall, ShieldAlert, Loader2
+  Building2, MapPin, Bed, Bath, 
+  Square, ShieldAlert, Loader2
 } from 'lucide-react';
 
-// Safely initialize Supabase client on runtime demand
-function getSupabaseClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Hardcoded public Supabase configuration
+const SUPABASE_URL = 'https://krxgbyjeskputjtuxlvw.supabase.co';
+// PASTE YOUR PUBLISHABLE ANON KEY BETWEEN THE QUOTES BELOW:
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
 
-  if (!url || !key || !url.startsWith('http')) {
-    return null;
-  }
-  return createClient(url, key);
-}
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 type County = 'All' | 'Ventura' | 'Los Angeles';
 
@@ -46,14 +42,6 @@ export default function PropertyHomePage() {
     async function fetchUnits() {
       try {
         setLoading(true);
-        const supabase = getSupabaseClient();
-
-        if (!supabase) {
-          console.warn('Supabase environment variables missing or invalid.');
-          setLoading(false);
-          return;
-        }
-
         const { data, error } = await supabase
           .from('units')
           .select(`

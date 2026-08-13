@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { ArrowLeft, Building2, PlusCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, PlusCircle, CheckCircle2 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyeGdieWplc2twdXRqdHV4aXZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODQ4MDgsImV4cCI6MjEwMjE2MDgwOH0.fszuxusHVtlYJ0r4OMa65St0dPlMuOnEUUHtA96Cr-8';
@@ -34,7 +34,6 @@ export default function AdminAddPropertyPage() {
     setSuccess(false);
 
     try {
-      // 1. Insert Property
       const { data: propData, error: propErr } = await supabase
         .from('properties')
         .insert([{
@@ -51,7 +50,6 @@ export default function AdminAddPropertyPage() {
 
       if (propErr) throw propErr;
 
-      // 2. Insert Unit linked to Property
       const { error: unitErr } = await supabase
         .from('units')
         .insert([{
@@ -73,8 +71,12 @@ export default function AdminAddPropertyPage() {
         unitNumber: 'Apt 101', rentAmount: '2500', bedrooms: '2', bathrooms: '1.5',
         sqft: '900', imageUrl: '', amenities: 'Parking, In-Unit Laundry'
       });
-    } catch (err: any) {
-      alert('Error adding property: ' + err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert('Error adding property: ' + err.message);
+      } else {
+        alert('An unexpected error occurred.');
+      }
     } finally {
       setSaving(false);
     }

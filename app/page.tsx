@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Building2, MapPin, Bed, Bath, 
-  Square, ShieldAlert, Loader2, AlertCircle
+  Square, Loader2, AlertCircle
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyeGdieWplc2twdXRqdHV4aXZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODQ4MDgsImV4cCI6MjEwMjE2MDgwOH0.fszuxusHVtlYJ0r4OMa65St0dPlMuOnEUUHtA96Cr-8''; // Your legacy anon key here
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyeGdieWplc2twdXRqdHV4aXZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODQ4MDgsImV4cCI6MjEwMjE2MDgwOH0.fszuxusHVtlYJ0r4OMa65St0dPlMuOnEUUHtA96Cr-8';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -20,21 +20,21 @@ interface PropertyUnit {
   rent_amount: number;
   bedrooms: number;
   bathrooms: number;
-  sqft: number;
-  status: string;
-  amenities: string[];
+  sqft: number | null;
+  status: string | null;
+  amenities: string[] | null;
   properties: {
     name: string;
     address: string;
     city: string;
     county: 'Ventura' | 'Los Angeles';
-    image_url?: string;
+    image_url?: string | null;
   } | null;
 }
 
 export default function PropertyHomePage() {
   const [properties, setProperties] = useState<PropertyUnit[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState<County>('All');
 
@@ -63,8 +63,12 @@ export default function PropertyHomePage() {
         } else if (data) {
           setProperties(data as unknown as PropertyUnit[]);
         }
-      } catch (err: any) {
-        setErrorMsg(err.message || 'An unexpected error occurred.');
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setErrorMsg(err.message);
+        } else {
+          setErrorMsg('An unexpected error occurred.');
+        }
       } finally {
         setLoading(false);
       }
@@ -73,8 +77,9 @@ export default function PropertyHomePage() {
     fetchUnits();
   }, []);
 
-  const filteredProperties = properties.filter(unit => {
-    return selectedCounty === 'All' || unit.properties?.county === selectedCounty;
+  const filteredProperties = properties.filter((unit) => {
+    if (selectedCounty === 'All') return true;
+    return unit.properties?.county === selectedCounty;
   });
 
   return (
@@ -91,7 +96,7 @@ export default function PropertyHomePage() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-slate-900">SoCal Property Hub</h1>
-              <p className="text-xs text-slate-500 font-medium">Ventura & LA County Rentals</p>
+              <p className="text-xs text-slate-500 font-medium">Ventura &amp; LA County Rentals</p>
             </div>
           </div>
 
@@ -116,7 +121,7 @@ export default function PropertyHomePage() {
         {/* Filter Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Available & Upcoming Vacancies</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Available &amp; Upcoming Vacancies</h2>
             <p className="text-sm text-slate-500 mt-1">Explore current residential openings across Ventura and Los Angeles Counties</p>
           </div>
 
@@ -127,6 +132,7 @@ export default function PropertyHomePage() {
                 <button
                   key={county}
                   onClick={() => setSelectedCounty(county)}
+                  type="button"
                   className={`px-4 py-1.5 rounded-md transition ${
                     selectedCounty === county ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'
                   }`}
@@ -165,6 +171,7 @@ export default function PropertyHomePage() {
                   
                   {/* Image Container with Badges */}
                   <div className="relative h-48 w-full bg-slate-200 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={unit.properties?.image_url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'} 
                       alt={unit.properties?.name || 'Property'} 
@@ -215,7 +222,7 @@ export default function PropertyHomePage() {
 
                       {/* Amenities Pills */}
                       <div className="flex flex-wrap gap-1.5 mb-6">
-                        {unit.amenities?.map((item, idx) => (
+                        {(unit.amenities || []).map((item, idx) => (
                           <span key={idx} className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2.5 py-1 rounded-md">
                             {item}
                           </span>
@@ -225,10 +232,10 @@ export default function PropertyHomePage() {
 
                     {/* Action Buttons */}
                     <div className="grid grid-cols-2 gap-3 pt-2">
-                      <button onClick={() => alert(`Scheduling tour for ${unit.properties?.name}`)} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl text-center transition">
+                      <button type="button" onClick={() => alert(`Scheduling tour for ${unit.properties?.name}`)} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl text-center transition">
                         Schedule Tour
                       </button>
-                      <button onClick={() => alert(`Applying online for ${unit.properties?.name}`)} className="bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-3 rounded-xl text-center transition">
+                      <button type="button" onClick={() => alert(`Applying online for ${unit.properties?.name}`)} className="bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-3 rounded-xl text-center transition">
                         Apply Online
                       </button>
                     </div>

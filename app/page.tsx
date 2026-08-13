@@ -4,13 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Building2, MapPin, Bed, Bath, 
-  Square, ShieldAlert, Loader2
+  Square, ShieldAlert, Loader2, AlertCircle
 } from 'lucide-react';
 
-// Hardcoded public Supabase configuration
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxlvw.supabase.co';
-// PASTE YOUR PUBLISHABLE ANON KEY BETWEEN THE QUOTES BELOW:
-const SUPABASE_ANON_KEY = 'sb_publishable_LJyOTqqq_mPqxqA5hub0Cw_eqjV8T6D';
+const SUPABASE_ANON_KEY = 'sb_publishable_LJyOTqqq_mPqxqaA5hub0Cw_eqjV8T6D';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -23,25 +21,28 @@ interface PropertyUnit {
   bedrooms: number;
   bathrooms: number;
   sqft: number;
-  status: 'Available Now' | 'Coming Soon' | 'Occupied';
+  status: string;
   amenities: string[];
   properties: {
     name: string;
     address: string;
     city: string;
     county: 'Ventura' | 'Los Angeles';
-  };
+  } | null;
 }
 
 export default function PropertyHomePage() {
   const [properties, setProperties] = useState<PropertyUnit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState<County>('All');
 
   useEffect(() => {
     async function fetchUnits() {
       try {
         setLoading(true);
+        setErrorMsg(null);
+
         const { data, error } = await supabase
           .from('units')
           .select(`
@@ -56,10 +57,13 @@ export default function PropertyHomePage() {
             properties (name, address, city, county)
           `);
 
-        if (error) throw error;
-        if (data) setProperties(data as unknown as PropertyUnit[]);
-      } catch (err) {
-        console.error('Error fetching properties from Supabase:', err);
+        if (error) {
+          setErrorMsg(error.message || JSON.stringify(error));
+        } else if (data) {
+          setProperties(data as unknown as PropertyUnit[]);
+        }
+      } catch (err: any) {
+        setErrorMsg(err.message || 'An unexpected error occurred.');
       } finally {
         setLoading(false);
       }
@@ -131,7 +135,14 @@ export default function PropertyHomePage() {
           </div>
         </div>
 
-        {loading ? (
+        {errorMsg ? (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 text-sm">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
+            <div>
+              <strong>Supabase Query Error:</strong> {errorMsg}
+            </div>
+          </div>
+        ) : loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
             <p className="text-slate-500 text-xs">Fetching live listings from Supabase...</p>
@@ -143,7 +154,7 @@ export default function PropertyHomePage() {
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-slate-900 text-base">{unit.properties?.name} - {unit.unit_number}</h4>
+                      <h4 className="font-bold text-slate-900 text-base">{unit.properties?.name || 'Rental Unit'} - {unit.unit_number}</h4>
                       <div className="text-right">
                         <span className="text-lg font-extrabold text-blue-600">${unit.rent_amount}</span>
                         <span className="text-[10px] text-slate-400 block">/month</span>
@@ -151,7 +162,7 @@ export default function PropertyHomePage() {
                     </div>
 
                     <p className="text-xs text-slate-500 flex items-center gap-1 mb-4">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400" /> {unit.properties?.address}, {unit.properties?.city}
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" /> {unit.properties?.address || 'Location unavailable'}, {unit.properties?.city || ''}
                     </p>
 
                     <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 mb-4 text-xs text-slate-600">

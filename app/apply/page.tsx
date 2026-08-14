@@ -74,10 +74,16 @@ function ApplicationForm() {
     { employerName: '', position: '', employmentLength: '', supervisorInfo: '', monthlyGrossIncome: '', additionalIncome: '' }
   ]);
 
-  // Section 5: Household Occupants, Vehicles & Pets
-  const [otherOccupants, setOtherOccupants] = useState<Array<{ name: string; age: string; relationship: string }>>([]);
-  const [vehicles, setVehicles] = useState<Array<{ makeModel: string; year: string; licensePlate: string }>>([]);
-  const [pets, setPets] = useState<Array<{ breedType: string; weight: string; age: string }>>([]);
+  // Section 5: Household Occupants, Vehicles & Pets (Initialized with 1 default line each)
+  const [otherOccupants, setOtherOccupants] = useState<Array<{ name: string; age: string; relationship: string }>>([
+    { name: '', age: '', relationship: '' }
+  ]);
+  const [vehicles, setVehicles] = useState<Array<{ makeModel: string; year: string; licensePlate: string }>>([
+    { makeModel: '', year: '', licensePlate: '' }
+  ]);
+  const [pets, setPets] = useState<Array<{ breedType: string; weight: string; age: string }>>([
+    { breedType: '', weight: '', age: '' }
+  ]);
 
   // Section 6: Emergency Contacts
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([
@@ -135,14 +141,37 @@ function ApplicationForm() {
       const primaryEmp = employers[0];
       const primaryEmerg = emergencyContacts[0];
 
-      const formattedProperties = properties.map((p, i) => `#${i + 1}: ${p.propertyName} (Unit ${p.unitNumber || 'N/A'}, Move-in: ${p.desiredMoveIn || 'N/A'})`).join(' | ');
-      const formattedCoApplicants = coApplicants.map(c => `${c.firstName} ${c.lastName} (${c.relationship}, Phone: ${c.phone}, Email: ${c.email})`).join(' | ');
-      const formattedResidences = residences.map((r, i) => `#${i + 1}: ${r.address}, ${r.city}, ${r.state} ${r.zip} (${r.dates}, Landlord: ${r.landlordName} - ${r.landlordPhone}, Reason: ${r.reasonLeaving})`).join('\n');
-      const formattedEmployers = employers.map((emp, i) => `#${i + 1}: ${emp.employerName} - ${emp.position} (${emp.employmentLength}, Gross: $${emp.monthlyGrossIncome}/mo, Sup: ${emp.supervisorInfo})`).join('\n');
-      const formattedOccupants = otherOccupants.map(o => `${o.name} (Age: ${o.age}, Rel: ${o.relationship})`).join(', ');
-      const formattedVehicles = vehicles.map(v => `${v.year} ${v.makeModel} [Plate: ${v.licensePlate}]`).join(', ');
-      const formattedPets = pets.map(p => `${p.breedType} (${p.weight} lbs, Age: ${p.age})`).join(', ');
-      const formattedEmergency = emergencyContacts.map(ec => `${ec.name} (${ec.relationship}): ${ec.phone}`).join(' | ');
+      const formattedProperties = properties
+        .filter(p => p.propertyName.trim() !== '')
+        .map((p, i) => `#${i + 1}: ${p.propertyName} (Unit ${p.unitNumber || 'N/A'}, Move-in: ${p.desiredMoveIn || 'N/A'})`).join(' | ');
+
+      const formattedCoApplicants = coApplicants
+        .filter(c => c.firstName.trim() !== '' || c.lastName.trim() !== '')
+        .map(c => `${c.firstName} ${c.lastName} (${c.relationship}, Phone: ${c.phone}, Email: ${c.email})`).join(' | ');
+
+      const formattedResidences = residences
+        .filter(r => r.address.trim() !== '')
+        .map((r, i) => `#${i + 1}: ${r.address}, ${r.city}, ${r.state} ${r.zip} (${r.dates}, Landlord: ${r.landlordName} - ${r.landlordPhone}, Reason: ${r.reasonLeaving})`).join('\n');
+
+      const formattedEmployers = employers
+        .filter(emp => emp.employerName.trim() !== '')
+        .map((emp, i) => `#${i + 1}: ${emp.employerName} - ${emp.position} (${emp.employmentLength}, Gross: $${emp.monthlyGrossIncome}/mo, Sup: ${emp.supervisorInfo})`).join('\n');
+
+      const formattedOccupants = otherOccupants
+        .filter(o => o.name.trim() !== '')
+        .map(o => `${o.name} (Age: ${o.age}, Rel: ${o.relationship})`).join(', ');
+
+      const formattedVehicles = vehicles
+        .filter(v => v.makeModel.trim() !== '' || v.licensePlate.trim() !== '')
+        .map(v => `${v.year} ${v.makeModel} [Plate: ${v.licensePlate}]`).join(', ');
+
+      const formattedPets = pets
+        .filter(p => p.breedType.trim() !== '')
+        .map(p => `${p.breedType} (${p.weight} lbs, Age: ${p.age})`).join(', ');
+
+      const formattedEmergency = emergencyContacts
+        .filter(ec => ec.name.trim() !== '')
+        .map(ec => `${ec.name} (${ec.relationship}): ${ec.phone}`).join(' | ');
 
       const { error } = await supabase
         .from('applications')
@@ -565,12 +594,13 @@ function ApplicationForm() {
             ))}
           </div>
 
-          {/* Section 5: Occupants, Vehicles & Pets */}
+          {/* Section 5: Occupants, Vehicles & Pets (Automatic line default + Add/Delete) */}
           <div className="space-y-6 pt-4 border-t border-slate-100">
             <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2 border-b border-slate-100 pb-2">
               <Car className="w-4 h-4" /> 5. Household Occupants, Vehicles &amp; Pets
             </h3>
 
+            {/* Additional Non-Applying Occupants */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Additional Non-Applying Occupants</span>
@@ -595,13 +625,16 @@ function ApplicationForm() {
                     updated[idx].relationship = e.target.value;
                     setOtherOccupants(updated);
                   }} className="w-32 p-2 border border-slate-200 rounded-lg text-xs" />
-                  <button type="button" onClick={() => removeOccupant(idx)} className="text-slate-400 hover:text-red-600 p-1">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {otherOccupants.length > 1 && (
+                    <button type="button" onClick={() => removeOccupant(idx)} className="text-slate-400 hover:text-red-600 p-1">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
 
+            {/* Vehicles */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Vehicles</span>
@@ -621,13 +654,16 @@ function ApplicationForm() {
                     updated[idx].licensePlate = e.target.value;
                     setVehicles(updated);
                   }} className="w-40 p-2 border border-slate-200 rounded-lg text-xs" />
-                  <button type="button" onClick={() => removeVehicle(idx)} className="text-slate-400 hover:text-red-600 p-1">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {vehicles.length > 1 && (
+                    <button type="button" onClick={() => removeVehicle(idx)} className="text-slate-400 hover:text-red-600 p-1">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
 
+            {/* Pets */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Pets</span>
@@ -647,9 +683,11 @@ function ApplicationForm() {
                     updated[idx].weight = e.target.value;
                     setPets(updated);
                   }} className="w-28 p-2 border border-slate-200 rounded-lg text-xs" />
-                  <button type="button" onClick={() => removePet(idx)} className="text-slate-400 hover:text-red-600 p-1">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {pets.length > 1 && (
+                    <button type="button" onClick={() => removePet(idx)} className="text-slate-400 hover:text-red-600 p-1">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

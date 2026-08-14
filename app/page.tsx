@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   Building2, MapPin, Bed, Bath, 
   Square, Loader2, AlertCircle, ShieldAlert,
-  Search, CheckCircle2, Phone, CreditCard, Wrench
+  Search, CheckCircle2, Phone, CreditCard, Wrench, Send
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
@@ -39,6 +39,20 @@ export default function PropertyHomePage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState<County>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Contact Form State
+  const [contactForm, setContactForm] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    subject: '',
+    propertyDescription: '',
+    message: ''
+  });
+  const [submittingContact, setSubmittingContact] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactError, setContactError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchUnits() {
@@ -78,6 +92,48 @@ export default function PropertyHomePage() {
 
     fetchUnits();
   }, []);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingContact(true);
+    setContactSuccess(false);
+    setContactError(null);
+
+    try {
+      const { error } = await supabase
+        .from('contact_submissions')
+        .insert([{
+          first_name: contactForm.firstName,
+          last_name: contactForm.lastName,
+          phone: contactForm.phone,
+          email: contactForm.email,
+          subject: contactForm.subject,
+          property_description: contactForm.propertyDescription,
+          message: contactForm.message
+        }]);
+
+      if (error) throw error;
+
+      setContactSuccess(true);
+      setContactForm({
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: '',
+        subject: '',
+        propertyDescription: '',
+        message: ''
+      });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setContactError(err.message);
+      } else {
+        setContactError('Failed to send message. Please try again.');
+      }
+    } finally {
+      setSubmittingContact(false);
+    }
+  };
 
   const filteredProperties = properties.filter((unit) => {
     const matchesCounty = selectedCounty === 'All' || unit.properties?.county === selectedCounty;
@@ -138,9 +194,8 @@ export default function PropertyHomePage() {
         </div>
       </header>
 
-      {/* Hero Section with Ventura County Imagery */}
+      {/* Hero Section */}
       <section className="relative bg-slate-900 text-white py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Background Image: Ventura Coastline */}
         <div className="absolute inset-0 z-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
@@ -166,7 +221,6 @@ export default function PropertyHomePage() {
           <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-2xl text-slate-800 text-left max-w-3xl mx-auto mt-8 border border-white/20">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
               
-              {/* Search Field */}
               <div className="md:col-span-6 relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                 <input 
@@ -178,7 +232,6 @@ export default function PropertyHomePage() {
                 />
               </div>
 
-              {/* County Select */}
               <div className="md:col-span-4">
                 <div className="flex bg-slate-100 p-1 rounded-xl">
                   {(['All', 'Ventura', 'Los Angeles'] as County[]).map((county) => (
@@ -198,7 +251,6 @@ export default function PropertyHomePage() {
                 </div>
               </div>
 
-              {/* Search Button */}
               <div className="md:col-span-2">
                 <a 
                   href="#listings" 
@@ -269,7 +321,6 @@ export default function PropertyHomePage() {
               return (
                 <div key={unit.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
                   
-                  {/* Clickable Image Container */}
                   <a href={`/properties/${unit.id}`} className="relative h-52 w-full bg-slate-200 overflow-hidden block group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
@@ -278,7 +329,6 @@ export default function PropertyHomePage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     
-                    {/* Status Badge */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md text-white shadow-sm ${
                         isComingSoon ? 'bg-amber-500' : 'bg-emerald-500'
@@ -287,7 +337,6 @@ export default function PropertyHomePage() {
                       </span>
                     </div>
 
-                    {/* County Badge */}
                     <div className="absolute top-3 right-3">
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-900/80 text-white backdrop-blur-sm">
                         {isVentura ? 'Ventura Co.' : 'Los Angeles Co.'}
@@ -295,7 +344,6 @@ export default function PropertyHomePage() {
                     </div>
                   </a>
 
-                  {/* Property Details */}
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-1 gap-2">
@@ -313,14 +361,12 @@ export default function PropertyHomePage() {
                         {unit.properties?.address}, {unit.properties?.city}
                       </p>
 
-                      {/* Specs Row */}
                       <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 mb-5 text-xs text-slate-600 font-medium">
                         <div className="flex items-center gap-1.5"><Bed className="w-4 h-4 text-slate-400"/> {unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} Bed`}</div>
                         <div className="flex items-center gap-1.5"><Bath className="w-4 h-4 text-slate-400"/> {unit.bathrooms} Bath</div>
                         <div className="flex items-center gap-1.5"><Square className="w-4 h-4 text-slate-400"/> {unit.sqft ? `${unit.sqft} sqft` : '---'}</div>
                       </div>
 
-                      {/* Amenities Pills */}
                       <div className="flex flex-wrap gap-1.5 mb-6">
                         {(unit.amenities || []).map((item, idx) => (
                           <span key={idx} className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2.5 py-1 rounded-md">
@@ -330,7 +376,6 @@ export default function PropertyHomePage() {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="grid grid-cols-2 gap-3 pt-2">
                       <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl text-center transition">
                         View Details
@@ -351,6 +396,127 @@ export default function PropertyHomePage() {
           </div>
         )}
       </main>
+
+      {/* Contact Us Today Section */}
+      <section id="contact" className="bg-white border-t border-slate-200 py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center">
+          
+          <h2 className="text-3xl sm:text-4xl font-serif text-slate-900 tracking-tight">Contact Us Today</h2>
+          <div className="w-12 h-0.5 bg-rose-700 mx-auto my-4" />
+          <p className="text-slate-600 text-sm sm:text-base font-light mb-10">
+            Let us know how we can be of assistance. We look forward to hearing from you!
+          </p>
+
+          {contactSuccess && (
+            <div className="p-4 mb-8 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl font-medium flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              Thank you! Your message has been received. We will get back to you shortly.
+            </div>
+          )}
+
+          {contactError && (
+            <div className="p-4 mb-8 bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl font-medium flex items-center justify-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              {contactError}
+            </div>
+          )}
+
+          <form onSubmit={handleContactSubmit} className="space-y-6 text-left">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-slate-700 text-sm font-normal mb-2">Full name</label>
+                <input 
+                  required
+                  type="text" 
+                  value={contactForm.firstName}
+                  onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 text-sm font-normal mb-2">Last Name</label>
+                <input 
+                  required
+                  type="text" 
+                  value={contactForm.lastName}
+                  onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-slate-700 text-sm font-normal mb-2">Phone</label>
+                <input 
+                  type="tel" 
+                  value={contactForm.phone}
+                  onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 text-sm font-normal mb-2">Email</label>
+                <input 
+                  required
+                  type="email" 
+                  value={contactForm.email}
+                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-slate-700 text-sm font-normal mb-2">Subject / Inquiry Type</label>
+                <input 
+                  type="text" 
+                  value={contactForm.subject}
+                  onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 text-sm font-normal mb-2">Description of Property(s)</label>
+                <input 
+                  type="text" 
+                  value={contactForm.propertyDescription}
+                  onChange={(e) => setContactForm({ ...contactForm, propertyDescription: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 text-sm font-normal mb-2">Message Or Questions</label>
+              <textarea 
+                required
+                rows={5}
+                value={contactForm.message}
+                onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
+              />
+            </div>
+
+            <div className="text-center pt-4">
+              <button 
+                type="submit" 
+                disabled={submittingContact}
+                className="bg-rose-800 hover:bg-rose-900 text-white font-normal px-12 py-3.5 text-base tracking-wide transition shadow-sm disabled:opacity-50"
+              >
+                {submittingContact ? 'Sending...' : 'Submit'}
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </section>
 
     </div>
   );

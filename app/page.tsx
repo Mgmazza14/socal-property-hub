@@ -129,8 +129,7 @@ export default function PropertyHomePage() {
       } else {
         setContactError('Failed to send message. Please try again.');
       }
-    } font-semibold
-    finally {
+    } finally {
       setSubmittingContact(false);
     }
   };

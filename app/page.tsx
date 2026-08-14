@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Home, MapPin, Bed, Bath, 
-  Square, Loader2, AlertCircle, ShieldAlert,
+  Square, Loader2, AlertCircle,
   Search, CheckCircle2, Phone, CreditCard, Wrench, Mail, FileText
 } from 'lucide-react';
 
@@ -189,14 +189,14 @@ export default function PropertyHomePage() {
               <a href="#contact" className="hover:text-cyan-900 transition">Contact Us</a>
             </nav>
 
-            {/* Header Action Buttons */}
+            {/* Header Action Buttons (Matching Ocean Blue Theme) */}
             <div className="flex items-center gap-3">
-              <a href="/apply" className="bg-cyan-900 hover:bg-cyan-950 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition hidden sm:inline-block">
+              <a href="/apply" className="bg-slate-100 hover:bg-slate-200 text-cyan-900 text-xs font-bold px-4 py-2.5 rounded-xl transition hidden sm:inline-block">
                 Apply Online
               </a>
               <a 
                 href="/pay-rent"
-                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center justify-center"
+                className="bg-cyan-900 hover:bg-cyan-950 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center justify-center"
               >
                 Pay Rent
               </a>
@@ -337,7 +337,7 @@ export default function PropertyHomePage() {
                       
                       <div className="absolute top-3 left-3 flex gap-2">
                         <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md text-white shadow-sm ${
-                          isComingSoon ? 'bg-amber-500' : 'bg-emerald-500'
+                          isComingSoon ? 'bg-amber-500' : 'bg-cyan-800'
                         }`}>
                           {unit.status || 'AVAILABLE NOW'}
                         </span>
@@ -382,7 +382,7 @@ export default function PropertyHomePage() {
                         </div>
                       </div>
 
-                      {/* Card Action Buttons (Matching Style) */}
+                      {/* Card Action Buttons (Cohesive Ocean Blue Theme) */}
                       <div className="grid grid-cols-3 gap-2 pt-2">
                         <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center">
                           Details
@@ -427,8 +427,8 @@ export default function PropertyHomePage() {
             </p>
 
             {contactSuccess && (
-              <div className="p-4 mb-8 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl font-medium flex items-center justify-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              <div className="p-4 mb-8 bg-sky-50 border border-sky-200 text-cyan-900 text-sm rounded-xl font-medium flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-cyan-800" />
                 Thank you! Your message has been received. We will get back to you shortly.
               </div>
             )}

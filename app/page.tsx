@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Building2, MapPin, Bed, Bath, 
-  Square, Loader2, AlertCircle, ShieldAlert
+  Square, Loader2, AlertCircle, ShieldAlert,
+  Search, CheckCircle2, Phone, CreditCard, Wrench
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
@@ -37,6 +38,7 @@ export default function PropertyHomePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedCounty, setSelectedCounty] = useState<County>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     async function fetchUnits() {
@@ -78,8 +80,14 @@ export default function PropertyHomePage() {
   }, []);
 
   const filteredProperties = properties.filter((unit) => {
-    if (selectedCounty === 'All') return true;
-    return unit.properties?.county === selectedCounty;
+    const matchesCounty = selectedCounty === 'All' || unit.properties?.county === selectedCounty;
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = !searchQuery || 
+      unit.properties?.name?.toLowerCase().includes(searchLower) ||
+      unit.properties?.city?.toLowerCase().includes(searchLower) ||
+      unit.properties?.address?.toLowerCase().includes(searchLower);
+
+    return matchesCounty && matchesSearch;
   });
 
   return (
@@ -90,23 +98,23 @@ export default function PropertyHomePage() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
           <span className="font-medium text-slate-300">40+ Years of Excellence in SoCal Residential Management</span>
           <div className="flex items-center gap-6">
-            <a href="/admin" className="text-blue-400 hover:text-blue-300 font-semibold transition flex items-center gap-1">
-              + Owner/Admin Portal
-            </a>
-            <span className="flex items-center gap-1 text-amber-400 font-medium">
-              <ShieldAlert className="w-3.5 h-3.5" /> Maintenance Emergency: (805) 555-0199
+            <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+              <Phone className="w-3.5 h-3.5 text-blue-400" /> Office: (805) 555-0100
+            </span>
+            <span className="flex items-center gap-1.5 text-amber-400 font-semibold">
+              <ShieldAlert className="w-3.5 h-3.5" /> Maintenance Hotline: (805) 555-0199
             </span>
           </div>
         </div>
       </div>
 
-      {/* Header Bar */}
+      {/* Header Navigation */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           {/* Logo */}
           <a href="/" className="flex items-center gap-3">
-            <div className="bg-blue-600 text-white p-2.5 rounded-lg shadow-sm">
+            <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-sm">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
@@ -118,45 +126,122 @@ export default function PropertyHomePage() {
           {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
             <a href="#listings" className="text-slate-900 hover:text-blue-600 transition">Available Rentals</a>
-            <a href="/admin" className="hover:text-blue-600 transition">Owner Portal</a>
+            <a href="#tenant-portal" className="hover:text-blue-600 transition">Tenant Portal</a>
             <a href="#maintenance" className="hover:text-blue-600 transition">Maintenance</a>
             <a href="#contact" className="hover:text-blue-600 transition">Contact Us</a>
           </nav>
 
           {/* Action Button */}
-          <a href="#pay-rent" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-lg shadow transition">
+          <a href="#pay-rent" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow transition">
             Pay Rent Online
           </a>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main id="listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        
-        {/* Filter Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-          <div>
-            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Available &amp; Upcoming Vacancies</h2>
-            <p className="text-sm text-slate-500 mt-1">Explore current residential openings across Ventura and Los Angeles Counties</p>
-          </div>
+      {/* Hero Section with Ventura County Imagery */}
+      <section className="relative bg-slate-900 text-white py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Background Image: Ventura Coastline */}
+        <div className="absolute inset-0 z-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80" 
+            alt="Ventura County Coast" 
+            className="w-full h-full object-cover opacity-35 scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-slate-900/40" />
+        </div>
 
-          <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 text-xs font-semibold">
-            <span className="text-slate-500 px-2">Filter by County:</span>
-            <div className="flex bg-slate-100 p-1 rounded-lg">
-              {(['All', 'Ventura', 'Los Angeles'] as County[]).map((county) => (
-                <button
-                  key={county}
-                  onClick={() => setSelectedCounty(county)}
-                  type="button"
-                  className={`px-4 py-1.5 rounded-md transition ${
-                    selectedCounty === county ? 'bg-white text-blue-600 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900'
-                  }`}
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+          <span className="inline-block bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md">
+            Ventura &amp; Los Angeles Counties
+          </span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
+            Find Your Quality Residential Rental
+          </h1>
+          <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-normal">
+            Discover well-maintained apartments, townhomes, and single-family residences across Southern California with seamless online portal management.
+          </p>
+
+          {/* Integrated Search & Filter Box */}
+          <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-2xl text-slate-800 text-left max-w-3xl mx-auto mt-8 border border-white/20">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+              
+              {/* Search Field */}
+              <div className="md:col-span-6 relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <input 
+                  type="text" 
+                  placeholder="Search by city or neighborhood..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/30"
+                />
+              </div>
+
+              {/* County Select */}
+              <div className="md:col-span-4">
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  {(['All', 'Ventura', 'Los Angeles'] as County[]).map((county) => (
+                    <button
+                      key={county}
+                      onClick={() => setSelectedCounty(county)}
+                      type="button"
+                      className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition ${
+                        selectedCounty === county 
+                          ? 'bg-white text-blue-600 shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      {county === 'Los Angeles' ? 'LA' : county}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Search Button */}
+              <div className="md:col-span-2">
+                <a 
+                  href="#listings" 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center transition shadow-md"
                 >
-                  {county}
-                </button>
-              ))}
+                  View ({filteredProperties.length})
+                </a>
+              </div>
+
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Value Badges Section */}
+      <section className="bg-white border-b border-slate-200 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div className="flex items-center justify-center gap-3 text-slate-700">
+            <CreditCard className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <span className="text-xs font-semibold">Easy Online Rent Payments &amp; Auto-Pay</span>
+          </div>
+          <div className="flex items-center justify-center gap-3 text-slate-700">
+            <Wrench className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <span className="text-xs font-semibold">24/7 Dedicated Maintenance Response</span>
+          </div>
+          <div className="flex items-center justify-center gap-3 text-slate-700">
+            <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <span className="text-xs font-semibold">40+ Years of SoCal Management Experience</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Listings Grid */}
+      <main id="listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 border-b border-slate-200 pb-5">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Available &amp; Upcoming Vacancies</h2>
+            <p className="text-xs text-slate-500 mt-1">Showing active rental openings across Ventura &amp; Los Angeles Counties</p>
+          </div>
+          <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 self-start md:self-auto">
+            {filteredProperties.length} Properties Available
+          </span>
         </div>
 
         {/* Error Alert */}
@@ -171,11 +256,11 @@ export default function PropertyHomePage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24">
             <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-3" />
-            <p className="text-slate-500 text-xs font-medium">Loading rental listings...</p>
+            <p className="text-slate-500 text-xs font-medium">Loading rental inventory...</p>
           </div>
         ) : filteredProperties.length > 0 ? (
           
-          /* Property Cards Grid */
+          /* Property Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProperties.map((unit) => {
               const isComingSoon = unit.status?.toLowerCase().includes('coming');
@@ -185,7 +270,7 @@ export default function PropertyHomePage() {
                 <div key={unit.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
                   
                   {/* Clickable Image Container */}
-                  <a href={`/properties/${unit.id}`} className="relative h-48 w-full bg-slate-200 overflow-hidden block group">
+                  <a href={`/properties/${unit.id}`} className="relative h-52 w-full bg-slate-200 overflow-hidden block group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={unit.properties?.image_url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'} 
@@ -218,7 +303,7 @@ export default function PropertyHomePage() {
                           {unit.properties?.name}
                         </a>
                         <div className="text-right flex-shrink-0">
-                          <span className="text-xl font-extrabold text-blue-600">${unit.rent_amount}</span>
+                          <span className="text-xl font-black text-blue-600">${unit.rent_amount}</span>
                           <span className="text-[11px] text-slate-400 block font-normal">/month</span>
                         </div>
                       </div>
@@ -261,7 +346,9 @@ export default function PropertyHomePage() {
             })}
           </div>
         ) : (
-          <div className="text-center py-16 text-slate-500 text-sm">No properties found in this county.</div>
+          <div className="text-center py-16 text-slate-500 text-sm bg-white rounded-2xl border border-slate-200">
+            No properties found matching your search criteria. Try clearing filters.
+          </div>
         )}
       </main>
 

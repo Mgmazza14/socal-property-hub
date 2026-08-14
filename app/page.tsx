@@ -129,7 +129,8 @@ export default function PropertyHomePage() {
       } else {
         setContactError('Failed to send message. Please try again.');
       }
-    } finally {
+    } font-semibold
+    finally {
       setSubmittingContact(false);
     }
   };
@@ -189,9 +190,12 @@ export default function PropertyHomePage() {
               <a href="#contact" className="hover:text-cyan-900 transition">Contact Us</a>
             </nav>
 
-            {/* Header Action Buttons (Matching Ocean Blue Theme) */}
-            <div className="flex items-center gap-3">
-              <a href="/apply" className="bg-slate-100 hover:bg-slate-200 text-cyan-900 text-xs font-bold px-4 py-2.5 rounded-xl transition hidden sm:inline-block">
+            {/* Header Action Buttons (Matching Color & Style) */}
+            <div className="flex items-center gap-2.5">
+              <a 
+                href="/apply" 
+                className="bg-cyan-900 hover:bg-cyan-950 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition"
+              >
                 Apply Online
               </a>
               <a 
@@ -382,7 +386,7 @@ export default function PropertyHomePage() {
                         </div>
                       </div>
 
-                      {/* Card Action Buttons (Cohesive Ocean Blue Theme) */}
+                      {/* Card Action Buttons (Identically Styled) */}
                       <div className="grid grid-cols-3 gap-2 pt-2">
                         <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center">
                           Details

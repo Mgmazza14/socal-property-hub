@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   Home, MapPin, Bed, Bath, 
   Square, Loader2, AlertCircle, ShieldAlert,
-  Search, CheckCircle2, Phone, CreditCard, Wrench, Mail, FileText
+  Search, CheckCircle2, Phone, CreditCard, Wrench, Mail, FileText, DollarSign
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
@@ -40,7 +40,6 @@ export default function PropertyHomePage() {
   const [selectedCounty, setSelectedCounty] = useState<County>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Contact Form State
   const [contactForm, setContactForm] = useState({
     firstName: '',
     lastName: '',
@@ -135,6 +134,10 @@ export default function PropertyHomePage() {
     }
   };
 
+  const handlePayRentClick = (propertyName: string) => {
+    alert(`Opening Tenant Portal payment system for ${propertyName}. Please log in to complete your rent payment.`);
+  };
+
   const filteredProperties = properties.filter((unit) => {
     const matchesCounty = selectedCounty === 'All' || unit.properties?.county === selectedCounty;
     const searchLower = searchQuery.toLowerCase();
@@ -190,10 +193,18 @@ export default function PropertyHomePage() {
               <a href="#contact" className="hover:text-rose-800 transition">Contact Us</a>
             </nav>
 
-            {/* Action Button */}
-            <a href="/apply" className="bg-rose-800 hover:bg-rose-900 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow transition">
-              Apply Online
-            </a>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => handlePayRentClick('Mazza Family Rentals')}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5"
+              >
+                <DollarSign className="w-4 h-4" /> Pay Rent Online
+              </button>
+              <a href="/apply" className="bg-rose-800 hover:bg-rose-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition hidden sm:inline-block">
+                Apply Online
+              </a>
+            </div>
           </div>
         </header>
 
@@ -220,7 +231,7 @@ export default function PropertyHomePage() {
               Discover well-maintained apartments, townhomes, and single-family residences across Southern California with seamless online portal management.
             </p>
 
-            {/* Integrated Search & Filter Box */}
+            {/* Search Box */}
             <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-2xl text-slate-800 text-left max-w-3xl mx-auto mt-8 border border-white/20">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                 
@@ -268,7 +279,7 @@ export default function PropertyHomePage() {
           </div>
         </section>
 
-        {/* Value Badges Section */}
+        {/* Value Badges */}
         <section className="bg-white border-b border-slate-200 py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div className="flex items-center justify-center gap-3 text-slate-700">
@@ -286,7 +297,7 @@ export default function PropertyHomePage() {
           </div>
         </section>
 
-        {/* Main Listings Grid */}
+        {/* Listings Grid */}
         <main id="listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 border-b border-slate-200 pb-5">
@@ -299,7 +310,6 @@ export default function PropertyHomePage() {
             </span>
           </div>
 
-          {/* Error Alert */}
           {errorMsg && (
             <div className="p-4 mb-6 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 text-sm">
               <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
@@ -307,15 +317,12 @@ export default function PropertyHomePage() {
             </div>
           )}
 
-          {/* Loading Spinner */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24">
               <Loader2 className="w-10 h-10 text-rose-800 animate-spin mb-3" />
               <p className="text-slate-500 text-xs font-medium">Loading rental inventory...</p>
             </div>
           ) : filteredProperties.length > 0 ? (
-            
-            /* Property Grid */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredProperties.map((unit) => {
                 const isComingSoon = unit.status?.toLowerCase().includes('coming');
@@ -379,16 +386,24 @@ export default function PropertyHomePage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl text-center transition">
-                          View Details
+                      {/* Three-Button Row on Each Listing Card */}
+                      <div className="grid grid-cols-3 gap-2 pt-2">
+                        <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center">
+                          Details
                         </a>
                         <a 
                           href={`/apply?property=${encodeURIComponent(unit.properties?.name || '')}&unit=${encodeURIComponent(unit.unit_number || '')}`} 
-                          className="bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-bold py-3 rounded-xl text-center transition"
+                          className="bg-rose-50 hover:bg-rose-100 text-rose-800 text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center"
                         >
-                          Apply Online
+                          Apply
                         </a>
+                        <button
+                          type="button"
+                          onClick={() => handlePayRentClick(unit.properties?.name || 'Property')}
+                          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1"
+                        >
+                          <DollarSign className="w-3 h-3 flex-shrink-0" /> Pay Rent
+                        </button>
                       </div>
 
                     </div>
@@ -529,11 +544,10 @@ export default function PropertyHomePage() {
 
       </div>
 
-      {/* Custom Burgundy Footer Section */}
+      {/* Footer */}
       <footer className="bg-rose-900 text-white py-14 px-4 sm:px-6 lg:px-8 border-t border-rose-950">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
           
-          {/* Brand & Address Column */}
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="bg-white text-rose-900 p-2 rounded-xl shadow-sm">
@@ -555,7 +569,6 @@ export default function PropertyHomePage() {
             </div>
           </div>
 
-          {/* Links Column */}
           <div className="space-y-3">
             <h4 className="text-lg font-serif font-bold tracking-wide text-white">Links</h4>
             <ul className="space-y-2 text-sm text-rose-100 font-light">
@@ -566,14 +579,16 @@ export default function PropertyHomePage() {
             </ul>
           </div>
 
-          {/* Sign In Column */}
           <div className="space-y-3">
             <h4 className="text-lg font-serif font-bold tracking-wide text-white">Sign in</h4>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-rose-200">Tenants</p>
-              <a href="#pay-rent" className="inline-block text-sm text-rose-100 hover:text-white underline transition">
-                Log In
-              </a>
+              <button 
+                onClick={() => handlePayRentClick('Mazza Family Rentals')}
+                className="inline-block text-sm text-rose-100 hover:text-white underline transition"
+              >
+                Log In &amp; Pay Rent
+              </button>
             </div>
           </div>
 

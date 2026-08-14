@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   Home, ArrowLeft, CheckCircle2, AlertCircle, 
   FileText, Send, ShieldCheck, UserCheck, 
-  Briefcase, Car, HelpCircle, Plus, Trash2, Users 
+  Briefcase, Car, HelpCircle, Plus, Trash2 
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
@@ -14,17 +14,49 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+interface PropertyPref {
+  propertyName: string;
+  unitNumber: string;
+  desiredMoveIn: string;
+}
+
+interface ResidenceHistory {
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  dates: string;
+  landlordName: string;
+  landlordPhone: string;
+  reasonLeaving: string;
+}
+
+interface EmploymentHistory {
+  employerName: string;
+  position: string;
+  employmentLength: string;
+  supervisorInfo: string;
+  monthlyGrossIncome: string;
+  additionalIncome: string;
+}
+
+interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phone: string;
+}
+
 function ApplicationForm() {
   const searchParams = useSearchParams();
   const defaultProperty = searchParams.get('property') || '';
   const defaultUnit = searchParams.get('unit') || '';
 
-  // Section 1: Desired Properties (Dynamic Array)
-  const [properties, setProperties] = useState([
+  // Section 1: Desired Properties
+  const [properties, setProperties] = useState<PropertyPref[]>([
     { propertyName: defaultProperty, unitNumber: defaultUnit, desiredMoveIn: '' }
   ]);
 
-  // Section 2: Primary Applicant & Co-Applicants (Dynamic Array)
+  // Section 2: Primary Applicant & Co-Applicants
   const [primaryApplicant, setPrimaryApplicant] = useState({
     firstName: '', middleName: '', lastName: '', dob: '', ssnItin: '', dlNumber: '', dlState: 'CA', phone: '', email: ''
   });
@@ -32,23 +64,23 @@ function ApplicationForm() {
     firstName: string; lastName: string; phone: string; email: string; relationship: string;
   }>>([]);
 
-  // Section 3: Residence History (Dynamic Array)
-  const [residences, setResidences] = useState([
+  // Section 3: Residence History
+  const [residences, setResidences] = useState<ResidenceHistory[]>([
     { address: '', city: '', state: 'CA', zip: '', dates: '', landlordName: '', landlordPhone: '', reasonLeaving: '' }
   ]);
 
-  // Section 4: Employment & Income (Dynamic Array)
-  const [employers, setEmployers] = useState([
+  // Section 4: Employment & Income
+  const [employers, setEmployers] = useState<EmploymentHistory[]>([
     { employerName: '', position: '', employmentLength: '', supervisorInfo: '', monthlyGrossIncome: '', additionalIncome: '' }
   ]);
 
-  // Section 5: Occupants, Vehicles & Pets (Dynamic Arrays)
+  // Section 5: Household Occupants, Vehicles & Pets
   const [otherOccupants, setOtherOccupants] = useState<Array<{ name: string; age: string; relationship: string }>>([]);
   const [vehicles, setVehicles] = useState<Array<{ makeModel: string; year: string; licensePlate: string }>>([]);
   const [pets, setPets] = useState<Array<{ breedType: string; weight: string; age: string }>>([]);
 
-  // Section 6: Emergency Contacts (Dynamic Array)
-  const [emergencyContacts, setEmergencyContacts] = useState([
+  // Section 6: Emergency Contacts
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([
     { name: '', relationship: '', phone: '' }
   ]);
 
@@ -61,23 +93,19 @@ function ApplicationForm() {
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Helper Handlers for Section 1
+  // Helper Handlers
   const addProperty = () => setProperties([...properties, { propertyName: '', unitNumber: '', desiredMoveIn: '' }]);
   const removeProperty = (idx: number) => setProperties(properties.filter((_, i) => i !== idx));
 
-  // Helper Handlers for Section 2
   const addCoApplicant = () => setCoApplicants([...coApplicants, { firstName: '', lastName: '', phone: '', email: '', relationship: '' }]);
   const removeCoApplicant = (idx: number) => setCoApplicants(coApplicants.filter((_, i) => i !== idx));
 
-  // Helper Handlers for Section 3
   const addResidence = () => setResidences([...residences, { address: '', city: '', state: 'CA', zip: '', dates: '', landlordName: '', landlordPhone: '', reasonLeaving: '' }]);
   const removeResidence = (idx: number) => setResidences(residences.filter((_, i) => i !== idx));
 
-  // Helper Handlers for Section 4
   const addEmployer = () => setEmployers([...employers, { employerName: '', position: '', employmentLength: '', supervisorInfo: '', monthlyGrossIncome: '', additionalIncome: '' }]);
   const removeEmployer = (idx: number) => setEmployers(employers.filter((_, i) => i !== idx));
 
-  // Helper Handlers for Section 5
   const addOccupant = () => setOtherOccupants([...otherOccupants, { name: '', age: '', relationship: '' }]);
   const removeOccupant = (idx: number) => setOtherOccupants(otherOccupants.filter((_, i) => i !== idx));
 
@@ -87,7 +115,6 @@ function ApplicationForm() {
   const addPet = () => setPets([...pets, { breedType: '', weight: '', age: '' }]);
   const removePet = (idx: number) => setPets(pets.filter((_, i) => i !== idx));
 
-  // Helper Handlers for Section 6
   const addEmergencyContact = () => setEmergencyContacts([...emergencyContacts, { name: '', relationship: '', phone: '' }]);
   const removeEmergencyContact = (idx: number) => setEmergencyContacts(emergencyContacts.filter((_, i) => i !== idx));
 
@@ -103,12 +130,11 @@ function ApplicationForm() {
     setErrorMsg(null);
 
     try {
-      const primaryProp = properties[0] || {};
-      const primaryRes = residences[0] || {};
-      const primaryEmp = employers[0] || {};
-      const primaryEmerg = emergencyContacts[0] || {};
+      const primaryProp = properties[0];
+      const primaryRes = residences[0];
+      const primaryEmp = employers[0];
+      const primaryEmerg = emergencyContacts[0];
 
-      // Format dynamic arrays for DB storage
       const formattedProperties = properties.map((p, i) => `#${i + 1}: ${p.propertyName} (Unit ${p.unitNumber || 'N/A'}, Move-in: ${p.desiredMoveIn || 'N/A'})`).join(' | ');
       const formattedCoApplicants = coApplicants.map(c => `${c.firstName} ${c.lastName} (${c.relationship}, Phone: ${c.phone}, Email: ${c.email})`).join(' | ');
       const formattedResidences = residences.map((r, i) => `#${i + 1}: ${r.address}, ${r.city}, ${r.state} ${r.zip} (${r.dates}, Landlord: ${r.landlordName} - ${r.landlordPhone}, Reason: ${r.reasonLeaving})`).join('\n');
@@ -121,9 +147,9 @@ function ApplicationForm() {
       const { error } = await supabase
         .from('applications')
         .insert([{
-          property_name: formattedProperties || primaryProp.propertyName,
-          unit_number: primaryProp.unitNumber,
-          desired_move_in: primaryProp.desiredMoveIn || null,
+          property_name: formattedProperties || primaryProp?.propertyName || '',
+          unit_number: primaryProp?.unitNumber || '',
+          desired_move_in: primaryProp?.desiredMoveIn || null,
           first_name: primaryApplicant.firstName,
           middle_name: primaryApplicant.middleName,
           last_name: primaryApplicant.lastName,
@@ -133,26 +159,26 @@ function ApplicationForm() {
           dl_state: primaryApplicant.dlState,
           phone: primaryApplicant.phone,
           email: primaryApplicant.email,
-          current_address: primaryRes.address,
-          current_city: primaryRes.city,
-          current_state: primaryRes.state,
-          current_zip: primaryRes.zip,
-          current_dates: primaryRes.dates,
-          current_landlord_name: primaryRes.landlordName,
-          current_landlord_phone: primaryRes.landlordPhone,
-          current_reason_leaving: primaryRes.reasonLeaving,
+          current_address: primaryRes?.address || '',
+          current_city: primaryRes?.city || '',
+          current_state: primaryRes?.state || '',
+          current_zip: primaryRes?.zip || '',
+          current_dates: primaryRes?.dates || '',
+          current_landlord_name: primaryRes?.landlordName || '',
+          current_landlord_phone: primaryRes?.landlordPhone || '',
+          current_reason_leaving: primaryRes?.reasonLeaving || '',
           previous_address: formattedResidences,
-          employer_name: primaryEmp.employerName,
-          position: primaryEmp.position,
-          employment_length: primaryEmp.employmentLength,
-          supervisor_name: primaryEmp.supervisorInfo,
-          monthly_gross_income: primaryEmp.monthlyGrossIncome ? Number(primaryEmp.monthlyGrossIncome) : null,
+          employer_name: primaryEmp?.employerName || '',
+          position: primaryEmp?.position || '',
+          employment_length: primaryEmp?.employmentLength || '',
+          supervisor_name: primaryEmp?.supervisorInfo || '',
+          monthly_gross_income: primaryEmp?.monthlyGrossIncome ? Number(primaryEmp.monthlyGrossIncome) : null,
           additional_income: formattedEmployers,
           other_occupants: formattedCoApplicants ? `Co-Applicants: ${formattedCoApplicants} | Occupants: ${formattedOccupants}` : formattedOccupants,
           pets: formattedPets,
           vehicles: formattedVehicles,
-          emergency_contact_name: primaryEmerg.name,
-          emergency_contact_rel: primaryEmerg.relationship,
+          emergency_contact_name: primaryEmerg?.name || '',
+          emergency_contact_rel: primaryEmerg?.relationship || '',
           emergency_contact_phone: formattedEmergency,
           evicted: disclosures.evicted,
           bankrupt: disclosures.bankrupt,
@@ -223,7 +249,7 @@ function ApplicationForm() {
             </div>
           )}
 
-          {/* Section 1: Desired Properties (Dynamic) */}
+          {/* Section 1: Desired Properties */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2">
@@ -289,7 +315,7 @@ function ApplicationForm() {
             ))}
           </div>
 
-          {/* Section 2: Applicants & Co-Applicants (Dynamic) */}
+          {/* Section 2: Applicants & Co-Applicants */}
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2">
@@ -300,7 +326,6 @@ function ApplicationForm() {
               </button>
             </div>
 
-            {/* Primary Applicant */}
             <div className="space-y-4">
               <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800 bg-rose-50 px-2.5 py-1 rounded-md inline-block">Primary Applicant</span>
               
@@ -350,7 +375,6 @@ function ApplicationForm() {
               </div>
             </div>
 
-            {/* Dynamic Co-Applicants */}
             {coApplicants.map((coApp, idx) => (
               <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative space-y-3 mt-4">
                 <button type="button" onClick={() => removeCoApplicant(idx)} className="absolute top-3 right-3 text-slate-400 hover:text-red-600 transition">
@@ -387,7 +411,7 @@ function ApplicationForm() {
             ))}
           </div>
 
-          {/* Section 3: Residence History (Dynamic) */}
+          {/* Section 3: Residence History */}
           <div className="space-y-4 pt-4 border-t border-slate-100">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2">
@@ -470,7 +494,7 @@ function ApplicationForm() {
             ))}
           </div>
 
-          {/* Section 4: Employment & Financial (Dynamic) */}
+          {/* Section 4: Employment & Financial */}
           <div className="space-y-4 pt-4 border-t border-slate-100">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2">
@@ -541,13 +565,12 @@ function ApplicationForm() {
             ))}
           </div>
 
-          {/* Section 5: Occupants, Vehicles & Pets (Dynamic Lists) */}
+          {/* Section 5: Occupants, Vehicles & Pets */}
           <div className="space-y-6 pt-4 border-t border-slate-100">
             <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2 border-b border-slate-100 pb-2">
               <Car className="w-4 h-4" /> 5. Household Occupants, Vehicles &amp; Pets
             </h3>
 
-            {/* Other Occupants */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Additional Non-Applying Occupants</span>
@@ -579,7 +602,6 @@ function ApplicationForm() {
               ))}
             </div>
 
-            {/* Vehicles */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Vehicles</span>
@@ -606,7 +628,6 @@ function ApplicationForm() {
               ))}
             </div>
 
-            {/* Pets */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Pets</span>
@@ -634,7 +655,7 @@ function ApplicationForm() {
             </div>
           </div>
 
-          {/* Section 6: Emergency Contacts (Dynamic) */}
+          {/* Section 6: Emergency Contacts */}
           <div className="space-y-4 pt-4 border-t border-slate-100">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-rose-800 flex items-center gap-2">

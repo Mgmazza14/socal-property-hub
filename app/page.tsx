@@ -1,604 +1,303 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { 
-  Home, MapPin, Bed, Bath, 
-  Square, Loader2, AlertCircle, ShieldAlert,
-  Search, CheckCircle2, Phone, CreditCard, Wrench, Mail, FileText, DollarSign
-} from 'lucide-react';
+import { Home, ArrowLeft, CheckCircle2, AlertCircle, DollarSign, Send, CreditCard, ShieldCheck } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyeGdieWplc2twdXRqdHV4aXZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODQ4MDgsImV4cCI6MjEwMjE2MDgwOH0.fszuxusHVtlYJ0r4OMa65St0dPlMuOnEUUHtA96Cr-8';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-type County = 'All' | 'Ventura' | 'Los Angeles';
+function PayRentForm() {
+  const searchParams = useSearchParams();
+  const defaultProperty = searchParams.get('property') || '';
+  const defaultUnit = searchParams.get('unit') || '';
 
-interface PropertyUnit {
-  id: string;
-  unit_number: string;
-  rent_amount: number;
-  bedrooms: number;
-  bathrooms: number;
-  sqft: number | null;
-  status: string | null;
-  amenities: string[] | null;
-  properties: {
-    name: string;
-    address: string;
-    city: string;
-    county: 'Ventura' | 'Los Angeles';
-    image_url?: string | null;
-  } | null;
-}
-
-export default function PropertyHomePage() {
-  const [properties, setProperties] = useState<PropertyUnit[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedCounty, setSelectedCounty] = useState<County>('All');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-
-  const [contactForm, setContactForm] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
+  const [form, setForm] = useState({
+    residentName: '',
     email: '',
-    subject: '',
-    propertyDescription: '',
-    message: ''
+    phone: '',
+    propertyName: defaultProperty,
+    unitNumber: defaultUnit,
+    paymentAmount: '',
+    paymentMethod: 'eCheck / ACH Bank Transfer',
+    paymentDate: new Date().toISOString().split('T')[0],
+    billingZip: '',
+    notes: '',
+    authorized: false
   });
-  const [submittingContact, setSubmittingContact] = useState(false);
-  const [contactSuccess, setContactSuccess] = useState(false);
-  const [contactError, setContactError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchUnits() {
-      try {
-        setLoading(true);
-        setErrorMsg(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-        const { data, error } = await supabase
-          .from('units')
-          .select(`
-            id,
-            unit_number,
-            rent_amount,
-            bedrooms,
-            bathrooms,
-            sqft,
-            status,
-            amenities,
-            properties (name, address, city, county, image_url)
-          `);
-
-        if (error) {
-          setErrorMsg(error.message);
-        } else if (data) {
-          setProperties(data as unknown as PropertyUnit[]);
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setErrorMsg(err.message);
-        } else {
-          setErrorMsg('An unexpected error occurred.');
-        }
-      } finally {
-        setLoading(false);
-      }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.authorized) {
+      setErrorMsg('Please check the authorization box to proceed with the payment.');
+      return;
     }
 
-    fetchUnits();
-  }, []);
-
-  const handleContactSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmittingContact(true);
-    setContactSuccess(false);
-    setContactError(null);
+    setSubmitting(true);
+    setSuccess(false);
+    setErrorMsg(null);
 
     try {
       const { error } = await supabase
-        .from('contact_submissions')
+        .from('rent_payments')
         .insert([{
-          first_name: contactForm.firstName,
-          last_name: contactForm.lastName,
-          phone: contactForm.phone,
-          email: contactForm.email,
-          subject: contactForm.subject,
-          property_description: contactForm.propertyDescription,
-          message: contactForm.message
+          resident_name: form.residentName,
+          email: form.email,
+          phone: form.phone,
+          property_name: form.propertyName,
+          unit_number: form.unitNumber,
+          payment_amount: form.paymentAmount ? Number(form.paymentAmount) : null,
+          payment_method: form.paymentMethod,
+          payment_date: form.paymentDate || null,
+          billing_zip: form.billingZip,
+          notes: form.notes
         }]);
 
       if (error) throw error;
 
-      setContactSuccess(true);
-      setContactForm({
-        firstName: '',
-        lastName: '',
-        phone: '',
-        email: '',
-        subject: '',
-        propertyDescription: '',
-        message: ''
-      });
+      setSuccess(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setContactError(err.message);
+        setErrorMsg(err.message);
       } else {
-        setContactError('Failed to send message. Please try again.');
+        setErrorMsg('Failed to process payment request. Please check required fields.');
       }
     } finally {
-      setSubmittingContact(false);
+      setSubmitting(false);
     }
   };
 
-  const handlePayRentClick = (propertyName: string) => {
-    alert(`Opening Tenant Portal payment system for ${propertyName}. Please log in to complete your rent payment.`);
-  };
-
-  const filteredProperties = properties.filter((unit) => {
-    const matchesCounty = selectedCounty === 'All' || unit.properties?.county === selectedCounty;
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = !searchQuery || 
-      unit.properties?.name?.toLowerCase().includes(searchLower) ||
-      unit.properties?.city?.toLowerCase().includes(searchLower) ||
-      unit.properties?.address?.toLowerCase().includes(searchLower);
-
-    return matchesCounty && matchesSearch;
-  });
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col justify-between">
-      <div>
-        
-        {/* Top Utility Bar */}
-        <div className="bg-slate-900 text-slate-300 text-xs py-2.5 px-4 sm:px-8 border-b border-slate-800">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
-            <span className="font-medium text-slate-300">40+ Years of Excellence in SoCal Residential Rentals</span>
-            <div className="flex flex-wrap items-center gap-6">
-              <a href="mailto:mrgtm@sbcglobal.net" className="flex items-center gap-1.5 text-slate-300 hover:text-white font-medium transition">
-                <Mail className="w-3.5 h-3.5 text-blue-400" /> mrgtm@sbcglobal.net
-              </a>
-              <a href="tel:8058893999" className="flex items-center gap-1.5 text-slate-300 hover:text-white font-medium transition">
-                <Phone className="w-3.5 h-3.5 text-blue-400" /> Direct: (805) 889-3999
-              </a>
-            </div>
-          </div>
+    <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 sm:p-10 shadow-sm">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
+        <a href="/" className="text-xs font-bold text-slate-500 hover:text-cyan-900 flex items-center gap-1.5 transition">
+          <ArrowLeft className="w-4 h-4" /> Back to Home
+        </a>
+        <div className="flex items-center gap-2">
+          <Home className="w-5 h-5 text-cyan-900" />
+          <span className="font-serif font-bold text-slate-900 text-sm">Mazza Family Rentals</span>
         </div>
-
-        {/* Header Navigation */}
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            
-            {/* Logo */}
-            <a href="/" className="flex items-center gap-3">
-              <div className="bg-rose-800 text-white p-2.5 rounded-xl shadow-sm">
-                <Home className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900">Mazza Family Rentals</h1>
-                <p className="text-xs text-slate-500 font-medium">Ventura &amp; LA County Residential Rentals</p>
-              </div>
-            </a>
-
-            {/* Nav Links */}
-            <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-              <a href="#listings" className="text-slate-900 hover:text-rose-800 transition">Available Rentals</a>
-              <a href="/apply" className="hover:text-rose-800 transition flex items-center gap-1">
-                <FileText className="w-4 h-4 text-rose-800" /> Apply Online
-              </a>
-              <a href="#maintenance" className="hover:text-rose-800 transition">Maintenance</a>
-              <a href="#contact" className="hover:text-rose-800 transition">Contact Us</a>
-            </nav>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => handlePayRentClick('Mazza Family Rentals')}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5"
-              >
-                <DollarSign className="w-4 h-4" /> Pay Rent Online
-              </button>
-              <a href="/apply" className="bg-rose-800 hover:bg-rose-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition hidden sm:inline-block">
-                Apply Online
-              </a>
-            </div>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section className="relative bg-slate-900 text-white py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80" 
-              alt="Ventura County Coast" 
-              className="w-full h-full object-cover opacity-35 scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-slate-900/40" />
-          </div>
-
-          <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
-            <span className="inline-block bg-white/10 text-rose-200 border border-white/20 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md">
-              Ventura &amp; Los Angeles Counties
-            </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
-              Find Your Quality Residential Rental
-            </h1>
-            <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-normal">
-              Discover well-maintained apartments, townhomes, and single-family residences across Southern California with seamless online portal management.
-            </p>
-
-            {/* Search Box */}
-            <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-2xl text-slate-800 text-left max-w-3xl mx-auto mt-8 border border-white/20">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-                
-                <div className="md:col-span-6 relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input 
-                    type="text" 
-                    placeholder="Search by city or neighborhood..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-rose-800/30"
-                  />
-                </div>
-
-                <div className="md:col-span-4">
-                  <div className="flex bg-slate-100 p-1 rounded-xl">
-                    {(['All', 'Ventura', 'Los Angeles'] as County[]).map((county) => (
-                      <button
-                        key={county}
-                        onClick={() => setSelectedCounty(county)}
-                        type="button"
-                        className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition ${
-                          selectedCounty === county 
-                            ? 'bg-white text-rose-800 shadow-sm' 
-                            : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        {county === 'Los Angeles' ? 'LA' : county}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="md:col-span-2">
-                  <a 
-                    href="#listings" 
-                    className="w-full bg-rose-800 hover:bg-rose-900 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center transition shadow-md"
-                  >
-                    View ({filteredProperties.length})
-                  </a>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Value Badges */}
-        <section className="bg-white border-b border-slate-200 py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div className="flex items-center justify-center gap-3 text-slate-700">
-              <CreditCard className="w-5 h-5 text-rose-800 flex-shrink-0" />
-              <span className="text-xs font-semibold">Easy Online Application &amp; Rent Payments</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-slate-700">
-              <Wrench className="w-5 h-5 text-rose-800 flex-shrink-0" />
-              <span className="text-xs font-semibold">Dedicated Maintenance Response: (805) 889-3999</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-slate-700">
-              <CheckCircle2 className="w-5 h-5 text-rose-800 flex-shrink-0" />
-              <span className="text-xs font-semibold">40+ Years of SoCal Residential Experience</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Listings Grid */}
-        <main id="listings" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 border-b border-slate-200 pb-5">
-            <div>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Available &amp; Upcoming Vacancies</h2>
-              <p className="text-xs text-slate-500 mt-1">Showing active rental openings across Ventura &amp; Los Angeles Counties</p>
-            </div>
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 self-start md:self-auto">
-              {filteredProperties.length} Properties Available
-            </span>
-          </div>
-
-          {errorMsg && (
-            <div className="p-4 mb-6 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 text-sm">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
-              <div><strong>Database Error:</strong> {errorMsg}</div>
-            </div>
-          )}
-
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-24">
-              <Loader2 className="w-10 h-10 text-rose-800 animate-spin mb-3" />
-              <p className="text-slate-500 text-xs font-medium">Loading rental inventory...</p>
-            </div>
-          ) : filteredProperties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProperties.map((unit) => {
-                const isComingSoon = unit.status?.toLowerCase().includes('coming');
-                const isVentura = unit.properties?.county === 'Ventura';
-
-                return (
-                  <div key={unit.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
-                    
-                    <a href={`/properties/${unit.id}`} className="relative h-52 w-full bg-slate-200 overflow-hidden block group">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
-                        src={unit.properties?.image_url || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'} 
-                        alt={unit.properties?.name || 'Property'} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      
-                      <div className="absolute top-3 left-3 flex gap-2">
-                        <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md text-white shadow-sm ${
-                          isComingSoon ? 'bg-amber-500' : 'bg-emerald-500'
-                        }`}>
-                          {unit.status || 'AVAILABLE NOW'}
-                        </span>
-                      </div>
-
-                      <div className="absolute top-3 right-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-900/80 text-white backdrop-blur-sm">
-                          {isVentura ? 'Ventura Co.' : 'Los Angeles Co.'}
-                        </span>
-                      </div>
-                    </a>
-
-                    <div className="p-6 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start mb-1 gap-2">
-                          <a href={`/properties/${unit.id}`} className="font-bold text-slate-900 text-lg leading-snug hover:text-rose-800 transition">
-                            {unit.properties?.name}
-                          </a>
-                          <div className="text-right flex-shrink-0">
-                            <span className="text-xl font-black text-rose-800">${unit.rent_amount}</span>
-                            <span className="text-[11px] text-slate-400 block font-normal">/month</span>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-slate-500 flex items-center gap-1.5 mb-5 font-medium">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                          {unit.properties?.address}, {unit.properties?.city}
-                        </p>
-
-                        <div className="grid grid-cols-3 gap-2 py-3 border-y border-slate-100 mb-5 text-xs text-slate-600 font-medium">
-                          <div className="flex items-center gap-1.5"><Bed className="w-4 h-4 text-slate-400"/> {unit.bedrooms === 0 ? 'Studio' : `${unit.bedrooms} Bed`}</div>
-                          <div className="flex items-center gap-1.5"><Bath className="w-4 h-4 text-slate-400"/> {unit.bathrooms} Bath</div>
-                          <div className="flex items-center gap-1.5"><Square className="w-4 h-4 text-slate-400"/> {unit.sqft ? `${unit.sqft} sqft` : '---'}</div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5 mb-6">
-                          {(unit.amenities || []).map((item, idx) => (
-                            <span key={idx} className="bg-slate-100 text-slate-600 text-[11px] font-medium px-2.5 py-1 rounded-md">
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Three-Button Row on Each Listing Card */}
-                      <div className="grid grid-cols-3 gap-2 pt-2">
-                        <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center">
-                          Details
-                        </a>
-                        <a 
-                          href={`/apply?property=${encodeURIComponent(unit.properties?.name || '')}&unit=${encodeURIComponent(unit.unit_number || '')}`} 
-                          className="bg-rose-50 hover:bg-rose-100 text-rose-800 text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center"
-                        >
-                          Apply
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => handlePayRentClick(unit.properties?.name || 'Property')}
-                          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1"
-                        >
-                          <DollarSign className="w-3 h-3 flex-shrink-0" /> Pay Rent
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-slate-500 text-sm bg-white rounded-2xl border border-slate-200">
-              No properties found matching your search criteria. Try clearing filters.
-            </div>
-          )}
-        </main>
-
-        {/* Contact Us Today Section */}
-        <section id="contact" className="bg-white border-t border-slate-200 py-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center">
-            
-            <h2 className="text-3xl sm:text-4xl font-serif text-slate-900 tracking-tight">Contact Us Today</h2>
-            <div className="w-12 h-0.5 bg-rose-800 mx-auto my-4" />
-            <p className="text-slate-600 text-sm sm:text-base font-light mb-2">
-              Let us know how we can be of assistance. We look forward to hearing from you!
-            </p>
-            <p className="text-xs text-rose-800 font-medium mb-10">
-              You can also call us directly at <a href="tel:8058893999" className="underline font-bold">(805) 889-3999</a> or email <a href="mailto:mrgtm@sbcglobal.net" className="underline font-bold">mrgtm@sbcglobal.net</a>
-            </p>
-
-            {contactSuccess && (
-              <div className="p-4 mb-8 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl font-medium flex items-center justify-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                Thank you! Your message has been received. We will get back to you shortly.
-              </div>
-            )}
-
-            {contactError && (
-              <div className="p-4 mb-8 bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl font-medium flex items-center justify-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-                {contactError}
-              </div>
-            )}
-
-            <form onSubmit={handleContactSubmit} className="space-y-6 text-left">
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-slate-700 text-sm font-normal mb-2">Full name</label>
-                  <input 
-                    required
-                    type="text" 
-                    value={contactForm.firstName}
-                    onChange={(e) => setContactForm({ ...contactForm, firstName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 text-sm font-normal mb-2">Last Name</label>
-                  <input 
-                    required
-                    type="text" 
-                    value={contactForm.lastName}
-                    onChange={(e) => setContactForm({ ...contactForm, lastName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-slate-700 text-sm font-normal mb-2">Phone</label>
-                  <input 
-                    type="tel" 
-                    value={contactForm.phone}
-                    onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 text-sm font-normal mb-2">Email</label>
-                  <input 
-                    required
-                    type="email" 
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-slate-700 text-sm font-normal mb-2">Subject / Inquiry Type</label>
-                  <input 
-                    type="text" 
-                    value={contactForm.subject}
-                    onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-700 text-sm font-normal mb-2">Description of Property(s)</label>
-                  <input 
-                    type="text" 
-                    value={contactForm.propertyDescription}
-                    onChange={(e) => setContactForm({ ...contactForm, propertyDescription: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-700 text-sm font-normal mb-2">Message Or Questions</label>
-                <textarea 
-                  required
-                  rows={5}
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-rose-800/60 rounded-none focus:outline-none focus:border-rose-800 focus:ring-1 focus:ring-rose-800 text-sm text-slate-800 bg-white"
-                />
-              </div>
-
-              <div className="text-center pt-4">
-                <button 
-                  type="submit" 
-                  disabled={submittingContact}
-                  className="bg-rose-800 hover:bg-rose-900 text-white font-normal px-12 py-3.5 text-base tracking-wide transition shadow-sm disabled:opacity-50"
-                >
-                  {submittingContact ? 'Sending...' : 'Submit'}
-                </button>
-              </div>
-
-            </form>
-
-          </div>
-        </section>
-
       </div>
 
-      {/* Footer */}
-      <footer className="bg-rose-900 text-white py-14 px-4 sm:px-6 lg:px-8 border-t border-rose-950">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center justify-center bg-sky-50 text-cyan-900 p-3 rounded-2xl mb-3">
+          <DollarSign className="w-6 h-6" />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900">Resident Rent Payment Portal</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-lg mx-auto">
+          Submit online rent payments securely for your Mazza Family Rentals property.
+        </p>
+      </div>
+
+      {success ? (
+        <div className="p-8 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-4">
+          <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+          <h2 className="text-xl font-bold text-emerald-900">Payment Submitted Successfully!</h2>
+          <p className="text-xs sm:text-sm text-emerald-800 max-w-md mx-auto">
+            Your payment receipt has been submitted for <strong>{form.propertyName} (Unit {form.unitNumber})</strong>. A confirmation copy will be sent to <strong>{form.email}</strong>.
+          </p>
+          <div className="pt-4">
+            <a href="/" className="bg-cyan-900 hover:bg-cyan-950 text-white font-bold px-6 py-2.5 rounded-xl text-xs inline-block transition">
+              Return to Website
+            </a>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-6 text-xs sm:text-sm font-medium">
           
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="bg-white text-rose-900 p-2 rounded-xl shadow-sm">
-                <Home className="w-6 h-6" />
+          {errorMsg && (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              {errorMsg}
+            </div>
+          )}
+
+          {/* Section 1: Property & Resident Info */}
+          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+            <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-cyan-900 flex items-center gap-2">
+              <Home className="w-4 h-4" /> 1. Resident &amp; Unit Information
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-slate-700 mb-1">Resident Full Name *</label>
+                <input 
+                  required 
+                  type="text" 
+                  placeholder="e.g. John Doe" 
+                  value={form.residentName} 
+                  onChange={e => setForm({...form, residentName: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white" 
+                />
               </div>
               <div>
-                <h3 className="text-xl font-serif font-bold tracking-tight">Mazza Family Rentals</h3>
+                <label className="block text-slate-700 mb-1">Email Address *</label>
+                <input 
+                  required 
+                  type="email" 
+                  placeholder="john@example.com" 
+                  value={form.email} 
+                  onChange={e => setForm({...form, email: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white" 
+                />
               </div>
             </div>
-            
-            <div className="text-sm text-rose-100 font-light space-y-1 pt-2">
-              <p>
-                <a href="mailto:mrgtm@sbcglobal.net" className="hover:text-white underline transition">
-                  mrgtm@sbcglobal.net
-                </a>
-              </p>
-              <p>(805) 889-3999</p>
-              <p className="pt-1">Ventura &amp; Los Angeles Counties, CA</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-slate-700 mb-1">Phone Number *</label>
+                <input 
+                  required 
+                  type="tel" 
+                  placeholder="(805) 889-3999" 
+                  value={form.phone} 
+                  onChange={e => setForm({...form, phone: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white" 
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1">Property Name / Address *</label>
+                <input 
+                  required 
+                  type="text" 
+                  placeholder="e.g. Coastal Palms" 
+                  value={form.propertyName} 
+                  onChange={e => setForm({...form, propertyName: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white" 
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1">Unit Number *</label>
+                <input 
+                  required 
+                  type="text" 
+                  placeholder="Apt 3B" 
+                  value={form.unitNumber} 
+                  onChange={e => setForm({...form, unitNumber: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white" 
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-lg font-serif font-bold tracking-wide text-white">Links</h4>
-            <ul className="space-y-2 text-sm text-rose-100 font-light">
-              <li><a href="/" className="hover:text-white transition">Home</a></li>
-              <li><a href="#listings" className="hover:text-white transition">Rental Listings</a></li>
-              <li><a href="/apply" className="hover:text-white transition">Apply Online</a></li>
-              <li><a href="#contact" className="hover:text-white transition">Contact</a></li>
-            </ul>
-          </div>
+          {/* Section 2: Payment Details */}
+          <div className="space-y-4 pt-2">
+            <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-cyan-900 flex items-center gap-2 border-b border-slate-100 pb-2">
+              <CreditCard className="w-4 h-4" /> 2. Payment Amount &amp; Method
+            </h3>
 
-          <div className="space-y-3">
-            <h4 className="text-lg font-serif font-bold tracking-wide text-white">Sign in</h4>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-rose-200">Tenants</p>
-              <button 
-                onClick={() => handlePayRentClick('Mazza Family Rentals')}
-                className="inline-block text-sm text-rose-100 hover:text-white underline transition"
-              >
-                Log In &amp; Pay Rent
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-slate-700 mb-1">Payment Amount ($) *</label>
+                <input 
+                  required 
+                  type="number" 
+                  placeholder="2450" 
+                  value={form.paymentAmount} 
+                  onChange={e => setForm({...form, paymentAmount: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl" 
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1">Payment Method</label>
+                <select 
+                  value={form.paymentMethod} 
+                  onChange={e => setForm({...form, paymentMethod: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white"
+                >
+                  <option value="eCheck / ACH Bank Transfer">eCheck / ACH Bank Transfer (Free)</option>
+                  <option value="Debit / Credit Card">Debit / Credit Card</option>
+                  <option value="Auto-Pay Enrollment">Set Up Monthly Auto-Pay</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1">Payment Date</label>
+                <input 
+                  type="date" 
+                  value={form.paymentDate} 
+                  onChange={e => setForm({...form, paymentDate: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl bg-white" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-slate-700 mb-1">Billing Zip Code *</label>
+                <input 
+                  required 
+                  type="text" 
+                  placeholder="93001" 
+                  value={form.billingZip} 
+                  onChange={e => setForm({...form, billingZip: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl" 
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1">Notes / Payment Memo (Optional)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. August Rent + Garage Fee" 
+                  value={form.notes} 
+                  onChange={e => setForm({...form, notes: e.target.value})} 
+                  className="w-full p-3 border border-slate-200 rounded-xl" 
+                />
+              </div>
             </div>
           </div>
 
-        </div>
+          {/* Section 3: Authorization */}
+          <div className="p-5 bg-sky-50/60 border border-sky-200 rounded-2xl space-y-3">
+            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-cyan-900 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4" /> Payment Authorization
+            </h4>
+            <p className="text-[11px] text-slate-600 leading-relaxed font-normal">
+              By checking the box below, you authorize Mazza Family Rentals to process the stated rent payment for your specified unit.
+            </p>
 
-        <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-rose-800/60 text-center text-xs text-rose-200 font-light">
-          © {new Date().getFullYear()} Mazza Family Rentals. All rights reserved.
-        </div>
-      </footer>
+            <label className="flex items-start gap-3 pt-2 text-xs font-bold text-slate-900 cursor-pointer">
+              <input 
+                type="checkbox" 
+                required 
+                checked={form.authorized} 
+                onChange={e => setForm({...form, authorized: e.target.checked})} 
+                className="w-4 h-4 text-cyan-900 rounded mt-0.5 flex-shrink-0" 
+              />
+              I authorize the rent payment charge for the amount listed above.
+            </label>
+          </div>
 
+          <button 
+            disabled={submitting}
+            type="submit" 
+            className="w-full bg-cyan-900 hover:bg-cyan-950 text-white font-bold py-4 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-md disabled:opacity-50 mt-8"
+          >
+            <Send className="w-4 h-4" /> {submitting ? 'Processing Payment...' : 'Submit Rent Payment'}
+          </button>
+
+        </form>
+      )}
+
+    </div>
+  );
+}
+
+export default function PayRentPage() {
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 sm:p-8">
+      <Suspense fallback={<div className="text-center py-20 text-xs text-slate-500">Loading payment portal...</div>}>
+        <PayRentForm />
+      </Suspense>
     </div>
   );
 }

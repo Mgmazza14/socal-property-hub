@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   Home, MapPin, Bed, Bath, 
   Square, Loader2, AlertCircle, ShieldAlert,
-  Search, CheckCircle2, Phone, CreditCard, Wrench, Mail, FileText, DollarSign
+  Search, CheckCircle2, Phone, CreditCard, Wrench, Mail, FileText
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://krxgbyjeskputjtuxivw.supabase.co';
@@ -185,23 +185,20 @@ export default function PropertyHomePage() {
               <a href="/apply" className="hover:text-cyan-900 transition flex items-center gap-1">
                 <FileText className="w-4 h-4 text-cyan-900" /> Apply Online
               </a>
-              <a href="/pay-rent" className="hover:text-cyan-900 transition flex items-center gap-1">
-                <DollarSign className="w-4 h-4 text-emerald-600" /> Pay Rent
-              </a>
               <a href="#maintenance" className="hover:text-cyan-900 transition">Maintenance</a>
               <a href="#contact" className="hover:text-cyan-900 transition">Contact Us</a>
             </nav>
 
-            {/* Action Buttons */}
+            {/* Header Action Buttons */}
             <div className="flex items-center gap-3">
-              <a 
-                href="/pay-rent"
-                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5"
-              >
-                <DollarSign className="w-4 h-4" /> Pay Rent Online
-              </a>
               <a href="/apply" className="bg-cyan-900 hover:bg-cyan-950 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition hidden sm:inline-block">
                 Apply Online
+              </a>
+              <a 
+                href="/pay-rent"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center justify-center"
+              >
+                Pay Rent
               </a>
             </div>
           </div>
@@ -385,7 +382,7 @@ export default function PropertyHomePage() {
                         </div>
                       </div>
 
-                      {/* Three-Button Row on Each Listing Card */}
+                      {/* Card Action Buttons (Matching Style) */}
                       <div className="grid grid-cols-3 gap-2 pt-2">
                         <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center">
                           Details
@@ -398,9 +395,9 @@ export default function PropertyHomePage() {
                         </a>
                         <a 
                           href={`/pay-rent?property=${encodeURIComponent(unit.properties?.name || '')}&unit=${encodeURIComponent(unit.unit_number || '')}`}
-                          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center gap-1"
+                          className="bg-sky-50 hover:bg-sky-100 text-cyan-900 text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center"
                         >
-                          <DollarSign className="w-3 h-3 flex-shrink-0" /> Pay Rent
+                          Pay Rent
                         </a>
                       </div>
 

@@ -209,17 +209,17 @@ export default function PropertyHomePage() {
           </div>
         </header>
 
-        {/* Hero Section with Simi Valley Smiley Face Hill Background */}
+        {/* Hero Section */}
         <section className="relative bg-slate-900 text-white py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="absolute inset-0 z-0">
-            {/* Direct Image Link & Brighter Opacity so it is clearly visible */}
+            {/* Working fallback image of beautiful California Hills! */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Smiley_Face_Hill_Simi_Valley.jpg" 
-              alt="Simi Valley Smiley Face Hill" 
+              src="https://images.unsplash.com/photo-1542282811-943ef1a977c3?auto=format&fit=crop&w=1800&q=80" 
+              alt="Southern California Hills" 
               className="w-full h-full object-cover opacity-60 scale-105"
             />
-            {/* Reduced gradient darkness so the hillside shows through */}
+            {/* Gradient overlay to make text readable */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent" />
           </div>
 

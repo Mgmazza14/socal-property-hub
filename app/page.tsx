@@ -209,16 +209,16 @@ export default function PropertyHomePage() {
           </div>
         </header>
 
-        {/* Hero Section */}
+        {/* Hero Section with Simi Valley Smiley Face Hill Background */}
         <section className="relative bg-slate-900 text-white py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="absolute inset-0 z-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80" 
-              alt="Ventura County Coast" 
-              className="w-full h-full object-cover opacity-35 scale-105"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Smiley_Face_Hill_Simi_Valley.jpg/1280px-Smiley_Face_Hill_Simi_Valley.jpg" 
+              alt="Simi Valley Smiley Face Hill" 
+              className="w-full h-full object-cover opacity-40 scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-slate-900/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-slate-900/30" />
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">

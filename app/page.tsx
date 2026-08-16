@@ -195,7 +195,7 @@ export default function PropertyHomePage() {
             <div className="flex items-center gap-2.5">
               <a 
                 href="/apply" 
-                className="bg-cyan-900 hover:bg-cyan-950 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition"
+                className="bg-cyan-900 hover:bg-cyan-950 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition hidden sm:inline-block"
               >
                 Apply Online
               </a>
@@ -212,23 +212,25 @@ export default function PropertyHomePage() {
         {/* Hero Section with Simi Valley Smiley Face Hill Background */}
         <section className="relative bg-slate-900 text-white py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="absolute inset-0 z-0">
+            {/* Direct Image Link & Brighter Opacity so it is clearly visible */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Smiley_Face_Hill_Simi_Valley.jpg/1280px-Smiley_Face_Hill_Simi_Valley.jpg" 
+              src="https://upload.wikimedia.org/wikipedia/commons/6/6b/Smiley_Face_Hill_Simi_Valley.jpg" 
               alt="Simi Valley Smiley Face Hill" 
-              className="w-full h-full object-cover opacity-40 scale-105"
+              className="w-full h-full object-cover opacity-60 scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-slate-900/30" />
+            {/* Reduced gradient darkness so the hillside shows through */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent" />
           </div>
 
           <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
-            <span className="inline-block bg-white/10 text-sky-200 border border-white/20 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md">
+            <span className="inline-block bg-slate-900/80 text-sky-300 border border-sky-300/30 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md">
               Thousand Oaks • Simi Valley • Ventura • San Fernando
             </span>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight drop-shadow-lg">
               Find Your Quality Residential Rental
             </h1>
-            <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto font-normal">
+            <p className="text-slate-100 text-base sm:text-lg max-w-2xl mx-auto font-medium drop-shadow-md">
               Discover well-maintained apartments, townhomes, and single-family residences across Southern California with seamless online portal management.
             </p>
 

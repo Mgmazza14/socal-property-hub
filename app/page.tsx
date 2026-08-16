@@ -13,7 +13,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-type County = 'All' | 'Ventura' | 'Los Angeles';
+type CityFilter = 'All' | 'Thousand Oaks' | 'Simi Valley' | 'Ventura' | 'San Fernando';
 
 interface PropertyUnit {
   id: string;
@@ -37,7 +37,7 @@ export default function PropertyHomePage() {
   const [properties, setProperties] = useState<PropertyUnit[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedCounty, setSelectedCounty] = useState<County>('All');
+  const [selectedCity, setSelectedCity] = useState<CityFilter>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const [contactForm, setContactForm] = useState({
@@ -135,14 +135,16 @@ export default function PropertyHomePage() {
   };
 
   const filteredProperties = properties.filter((unit) => {
-    const matchesCounty = selectedCounty === 'All' || unit.properties?.county === selectedCounty;
+    const matchesCity = selectedCity === 'All' || 
+      unit.properties?.city?.toLowerCase().includes(selectedCity.toLowerCase());
+      
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
       unit.properties?.name?.toLowerCase().includes(searchLower) ||
       unit.properties?.city?.toLowerCase().includes(searchLower) ||
       unit.properties?.address?.toLowerCase().includes(searchLower);
 
-    return matchesCounty && matchesSearch;
+    return matchesCity && matchesSearch;
   });
 
   return (
@@ -175,7 +177,7 @@ export default function PropertyHomePage() {
               </div>
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-slate-900">Mazza Family Rentals</h1>
-                <p className="text-xs text-slate-500 font-medium">Ventura &amp; LA County Residential Rentals</p>
+                <p className="text-xs text-slate-500 font-medium">Southern California Residential Rentals</p>
               </div>
             </a>
 
@@ -189,7 +191,7 @@ export default function PropertyHomePage() {
               <a href="#contact" className="hover:text-cyan-900 transition">Contact Us</a>
             </nav>
 
-            {/* Header Action Buttons (Matching Color & Style) */}
+            {/* Header Action Buttons */}
             <div className="flex items-center gap-2.5">
               <a 
                 href="/apply" 
@@ -221,7 +223,7 @@ export default function PropertyHomePage() {
 
           <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
             <span className="inline-block bg-white/10 text-sky-200 border border-white/20 text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider backdrop-blur-md">
-              Ventura &amp; Los Angeles Counties
+              Thousand Oaks • Simi Valley • Ventura • San Fernando
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
               Find Your Quality Residential Rental
@@ -230,35 +232,36 @@ export default function PropertyHomePage() {
               Discover well-maintained apartments, townhomes, and single-family residences across Southern California with seamless online portal management.
             </p>
 
-            {/* Search Box */}
-            <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-2xl text-slate-800 text-left max-w-3xl mx-auto mt-8 border border-white/20">
+            {/* City Search Box */}
+            <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-2xl text-slate-800 text-left max-w-4xl mx-auto mt-8 border border-white/20">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                 
-                <div className="md:col-span-6 relative">
+                <div className="md:col-span-4 relative">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input 
                     type="text" 
-                    placeholder="Search by city or neighborhood..." 
+                    placeholder="Search address or zip..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-900/30"
                   />
                 </div>
 
-                <div className="md:col-span-4">
-                  <div className="flex bg-slate-100 p-1 rounded-xl">
-                    {(['All', 'Ventura', 'Los Angeles'] as County[]).map((county) => (
+                {/* City Filter Buttons */}
+                <div className="md:col-span-6">
+                  <div className="flex bg-slate-100 p-1 rounded-xl overflow-x-auto gap-1">
+                    {(['All', 'Thousand Oaks', 'Simi Valley', 'Ventura', 'San Fernando'] as CityFilter[]).map((city) => (
                       <button
-                        key={county}
-                        onClick={() => setSelectedCounty(county)}
+                        key={city}
+                        onClick={() => setSelectedCity(city)}
                         type="button"
-                        className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition ${
-                          selectedCounty === county 
+                        className={`flex-1 py-2 px-2 text-[11px] font-bold rounded-lg transition whitespace-nowrap ${
+                          selectedCity === city 
                             ? 'bg-white text-cyan-900 shadow-sm' 
                             : 'text-slate-500 hover:text-slate-800'
                         }`}
                       >
-                        {county === 'Los Angeles' ? 'LA' : county}
+                        {city}
                       </button>
                     ))}
                   </div>
@@ -302,7 +305,9 @@ export default function PropertyHomePage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 border-b border-slate-200 pb-5">
             <div>
               <h2 className="text-2xl font-black text-slate-900 tracking-tight">Available &amp; Upcoming Vacancies</h2>
-              <p className="text-xs text-slate-500 mt-1">Showing active rental openings across Ventura &amp; Los Angeles Counties</p>
+              <p className="text-xs text-slate-500 mt-1">
+                {selectedCity === 'All' ? 'Showing active rental openings across all locations' : `Showing properties in ${selectedCity}`}
+              </p>
             </div>
             <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 self-start md:self-auto">
               {filteredProperties.length} Properties Available
@@ -325,7 +330,6 @@ export default function PropertyHomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredProperties.map((unit) => {
                 const isComingSoon = unit.status?.toLowerCase().includes('coming');
-                const isVentura = unit.properties?.county === 'Ventura';
 
                 return (
                   <div key={unit.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
@@ -348,7 +352,7 @@ export default function PropertyHomePage() {
 
                       <div className="absolute top-3 right-3">
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-900/80 text-white backdrop-blur-sm">
-                          {isVentura ? 'Ventura Co.' : 'Los Angeles Co.'}
+                          {unit.properties?.city || 'SoCal'}
                         </span>
                       </div>
                     </a>
@@ -385,7 +389,7 @@ export default function PropertyHomePage() {
                         </div>
                       </div>
 
-                      {/* Card Action Buttons (Identically Styled) */}
+                      {/* Card Action Buttons */}
                       <div className="grid grid-cols-3 gap-2 pt-2">
                         <a href={`/properties/${unit.id}`} className="bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold py-2.5 rounded-xl text-center transition flex items-center justify-center">
                           Details
@@ -411,7 +415,7 @@ export default function PropertyHomePage() {
             </div>
           ) : (
             <div className="text-center py-16 text-slate-500 text-sm bg-white rounded-2xl border border-slate-200">
-              No properties found matching your search criteria. Try clearing filters.
+              No properties found matching your city or search criteria. Try selecting &quot;All&quot; cities or clearing filters.
             </div>
           )}
         </main>
@@ -563,7 +567,7 @@ export default function PropertyHomePage() {
                 </a>
               </p>
               <p>(805) 889-3999</p>
-              <p className="pt-1">Ventura &amp; Los Angeles Counties, CA</p>
+              <p className="pt-1">Thousand Oaks, Simi Valley, Ventura &amp; San Fernando</p>
             </div>
           </div>
 
